@@ -4,6 +4,7 @@ import { useState } from 'react'
 
 export const Modal = ({closeModal, onSubmit, defaultValue}) => {
     const [formState, setFormState] = useState(defaultValue || {
+        id: "",
         page: "",
         description: "",
         status: "live",

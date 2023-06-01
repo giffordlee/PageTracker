@@ -2,6 +2,7 @@ import './App.css';
 import { Table } from './components/Table';
 import { Modal } from './components/Modal';
 import { useState, useEffect } from 'react';
+import axios from 'axios';
 
 function App() {
   const [modalOpen, setModalOpen] = useState(false);
@@ -9,19 +10,17 @@ function App() {
   const [rowToEdit, setRowToEdit] = useState(null)
 
   const handleDeleteRow = (targetIndex) => {
-    setRows(rows.filter((_, idx) => idx !== targetIndex))
+    axios.delete(`http://127.0.0.1:8000/api/pages/${targetIndex}`)
+    .then(() => fetchData())
   }
 
   const handleSubmit = (newRow) => {
     if (rowToEdit === null) {
-      setRows([...rows, newRow])
+      axios.post('http://127.0.0.1:8000/api/pages/', newRow).then(() => fetchData())
     } else {
-      setRows(rows.map((currRow, idx) => {
-        if (idx !== rowToEdit) {
-          return currRow
-        }
-        return newRow
-      }))
+      console.log(rowToEdit)
+      const newData = {page: newRow.page, description: newRow.description, status:newRow.status} 
+      axios.put(`http://127.0.0.1:8000/api/pages/${newRow.id}/`, newData).then(() => fetchData()).catch((e) => e.message)
     }
   }
 
@@ -30,20 +29,20 @@ function App() {
     setModalOpen(true)
   }
 
- 
+  const fetchData = () => {
+    fetch('http://127.0.0.1:8000/api/pages/')
+    .then((response) => response.json())
+    .then((json) => {
+      setRows(json)
+      console.log("json: ", json)
+      console.log("rows: ", rows)
+    })
+    
+  }
 
   useEffect(() => {
-    const fetchData = () => {
-      fetch('http://127.0.0.1:8000/api/pages/')
-      .then((response) => response.json())
-      .then((json) => {
-        setRows(json)
-        console.log("json: ", json)
-      })
-      console.log("rows: ", rows)
-    }
     fetchData()
-  })
+  },[])
 
   return (
     <div className="App">
@@ -57,7 +56,7 @@ function App() {
         setRowToEdit(null)
       }} 
       onSubmit = {handleSubmit}
-      defaultValue = {rowToEdit !== null && rows[rowToEdit]}
+      defaultValue = {rowToEdit !== null && rows.filter((row) => row.id === rowToEdit)[0]}
       />}
     </div>
   );
